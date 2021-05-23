@@ -1,25 +1,21 @@
 package me.lulu.twonlinediscordbot
 
-import dev.kord.core.Kord
-import dev.kord.core.entity.ReactionEmoji
-import dev.kord.core.event.message.MessageCreateEvent
-import dev.kord.core.on
-import kotlinx.coroutines.delay
+import com.kotlindiscord.kord.extensions.ExtensibleBot
+import me.lulu.twonlinediscordbot.classes.ClassExtension
 
 suspend fun main() {
-    val client = Kord("your bot token")
-    val pingPong = ReactionEmoji.Unicode("\uD83C\uDFD3")
+    val bot = ExtensibleBot(System.getenv("TOKEN")) {
+        commands {
+            defaultPrefix = "*"
+            slashCommands = true
 
-    client.on<MessageCreateEvent> {
-        if (message.content != "!ping") return@on
+        }
 
-        val response = message.channel.createMessage("Pong!")
-        response.addReaction(pingPong)
-
-        delay(5000)
-        message.delete()
-        response.delete()
+        extensions {
+            add(::TestExtension)
+            add(::ClassExtension)
+        }
     }
 
-    client.login()
+    bot.start()
 }
