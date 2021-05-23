@@ -1,7 +1,7 @@
 package me.lulu.twonlinediscordbot
 
 import com.kotlindiscord.kord.extensions.ExtensibleBot
-import me.lulu.twonlinediscordbot.classes.ClassExtension
+import me.lulu.twonlinediscordbot.classes.ClassModule
 
 suspend fun main() {
     val bot = ExtensibleBot(System.getenv("TOKEN")) {
@@ -13,7 +13,7 @@ suspend fun main() {
 
         extensions {
             add(::TestExtension)
-            add(::ClassExtension)
+            add(::ClassModule)
         }
     }
 
