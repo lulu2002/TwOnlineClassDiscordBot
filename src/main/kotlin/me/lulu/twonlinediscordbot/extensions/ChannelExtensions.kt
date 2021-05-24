@@ -2,9 +2,12 @@ package me.lulu.twonlinediscordbot.extensions
 
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.channel.GuildChannelBehavior
 import dev.kord.core.behavior.channel.editRolePermission
 import dev.kord.core.entity.PermissionOverwrite
+import dev.kord.core.entity.channel.CategorizableChannel
+import dev.kord.rest.builder.channel.ChannelPermissionModifyBuilder
 
 
 suspend fun <T : GuildChannelBehavior> T.makeTeacherViewOnly() = denyEveryone { +Permission.ViewChannel }
@@ -26,4 +29,14 @@ suspend fun <T : GuildChannelBehavior> T.allowEveryone(block: Permissions.Permis
         allowed += Permissions.invoke(block)
     }
     return this
+}
+
+suspend fun <T : GuildChannelBehavior> T.appendRolePermission(
+    roleId: Snowflake,
+    builder: ChannelPermissionModifyBuilder.() -> Unit
+) {
+
+    this.editRolePermission(roleId) {
+
+    }
 }

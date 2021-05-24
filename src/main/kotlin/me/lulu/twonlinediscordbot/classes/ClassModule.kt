@@ -143,7 +143,21 @@ private suspend fun Guild.createClassSet(className: String, levelName: Long) {
         }
     }
 
-    category.createTextChannel("公告區")
+    val channel = category.createTextChannel("公告區")
+    val role = channel.getPermissionOverwritesForRole(guild.everyoneRole.id)
+
+    channel.editRolePermission(guild.everyoneRole.id) {
+        channel.getPermissionOverwritesForRole(guild.everyoneRole.id)?.let {
+            allowed
+        }
+    }
+    channel.editRolePermission(guild.everyoneRole.id) {
+        allowed = role?.allowed?.copy { } ?: Permissions()
+        denied = role?.denied?.copy { } ?: Permissions()
+
+        denied += Permission.SendMessages
+    }
+
     category.createTextChannel("學生聊天")
     category.createVoiceChannel("上課區").makeTeacherSpeakOnly()
 }
