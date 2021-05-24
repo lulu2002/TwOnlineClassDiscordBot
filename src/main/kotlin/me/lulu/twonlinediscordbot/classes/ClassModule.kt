@@ -16,10 +16,7 @@ import dev.kord.core.behavior.createRole
 import dev.kord.core.behavior.createTextChannel
 import dev.kord.core.entity.Guild
 import kotlinx.coroutines.flow.collect
-import me.lulu.twonlinediscordbot.extensions.getCategoryByName
-import me.lulu.twonlinediscordbot.extensions.getRoleByName
-import me.lulu.twonlinediscordbot.extensions.makeTeacherSpeakOnly
-import me.lulu.twonlinediscordbot.extensions.makeTeacherViewOnly
+import me.lulu.twonlinediscordbot.extensions.*
 import java.awt.Color
 
 class ClassModule(bot: ExtensibleBot) : Extension(bot) {
@@ -143,21 +140,11 @@ private suspend fun Guild.createClassSet(className: String, levelName: Long) {
         }
     }
 
-    val channel = category.createTextChannel("公告區")
-    val role = channel.getPermissionOverwritesForRole(guild.everyoneRole.id)
-
-    channel.editRolePermission(guild.everyoneRole.id) {
-        channel.getPermissionOverwritesForRole(guild.everyoneRole.id)?.let {
-            allowed
-        }
-    }
-    channel.editRolePermission(guild.everyoneRole.id) {
-        allowed = role?.allowed?.copy { } ?: Permissions()
-        denied = role?.denied?.copy { } ?: Permissions()
-
+    category.createTextChannel("公告區").appendRolePermission(guild.everyoneRole.id) {
         denied += Permission.SendMessages
     }
 
     category.createTextChannel("學生聊天")
+    category.createTextChannel("YOYOYO")
     category.createVoiceChannel("上課區").makeTeacherSpeakOnly()
 }

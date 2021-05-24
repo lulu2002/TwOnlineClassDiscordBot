@@ -20,12 +20,14 @@ suspend fun <T : GuildChannelBehavior> T.makeTeacherSpeakOnly() = denyEveryone {
 suspend fun <T : GuildChannelBehavior> T.makeTeacherBroadcast() = makeTeacherSpeakOnly()
 
 suspend fun <T : GuildChannelBehavior> T.denyEveryone(block: Permissions.PermissionsBuilder.() -> Unit = {}): T {
-    this.editRolePermission(this.getGuild().everyoneRole.id) { }
+    this.appendRolePermission(this.getGuild().everyoneRole.id) {
+        denied += Permissions.invoke(block)
+    }
     return this
 }
 
 suspend fun <T : GuildChannelBehavior> T.allowEveryone(block: Permissions.PermissionsBuilder.() -> Unit = {}): T {
-    this.editRolePermission(this.getGuild().everyoneRole.id) {
+    this.appendRolePermission(this.getGuild().everyoneRole.id) {
         allowed += Permissions.invoke(block)
     }
     return this
@@ -35,8 +37,12 @@ suspend fun <T : GuildChannelBehavior> T.appendRolePermission(
     roleId: Snowflake,
     builder: ChannelPermissionModifyBuilder.() -> Unit
 ) {
-
     this.editRolePermission(roleId) {
+        asChannel().getPermissionOverwritesForRole(roleId)?.let {
+            denied = it.denied
+            allowed = it.allowed
+        }
 
+        builder.invoke(this)
     }
 }
