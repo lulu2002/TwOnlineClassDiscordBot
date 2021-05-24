@@ -10,6 +10,7 @@ import dev.kord.common.entity.Permissions
 import dev.kord.common.kColor
 import dev.kord.core.behavior.channel.createTextChannel
 import dev.kord.core.behavior.channel.createVoiceChannel
+import dev.kord.core.behavior.channel.editRolePermission
 import dev.kord.core.behavior.createCategory
 import dev.kord.core.behavior.createRole
 import dev.kord.core.behavior.createTextChannel
@@ -18,14 +19,13 @@ import kotlinx.coroutines.flow.collect
 import me.lulu.twonlinediscordbot.extensions.getCategoryByName
 import me.lulu.twonlinediscordbot.extensions.getRoleByName
 import me.lulu.twonlinediscordbot.extensions.makeTeacherSpeakOnly
+import me.lulu.twonlinediscordbot.extensions.makeTeacherViewOnly
 import java.awt.Color
 
 class ClassModule(bot: ExtensibleBot) : Extension(bot) {
     override val name = "class"
 
     override suspend fun setup() {
-
-
         group {
             name = "class"
             description = "用來管理學生的相關指令"
@@ -48,18 +48,19 @@ class ClassModule(bot: ExtensibleBot) : Extension(bot) {
 
 
                 action {
-                    val className = arguments.className
-                    guild!!.createClassSet(className)
+                    val className = arguments.grade
+                    val levelName = arguments.levelName
+                    guild!!.createClassSet(className, levelName)
                     message.respond("$className 創立完成！")
                 }
             }
 
-            command(ClassModule::CreateClassArgs) {
+            command(ClassModule::DeleteClassArgs) {
                 name = "delete"
                 description = "刪除班級"
 
                 action {
-                    val name = arguments.className
+                    val name = arguments.grade
                     val g = guild!!
 
                     val role = g.getRoleByName(name)
@@ -83,7 +84,12 @@ class ClassModule(bot: ExtensibleBot) : Extension(bot) {
 
 
     class CreateClassArgs : Arguments() {
-        val className by string("班級名稱", "即將做更動的班級");
+        val grade by string("班級名稱", "即將做更動的班級");
+        val levelName by long("班級年級", "班級屬於的年級")
+    }
+
+    class DeleteClassArgs : Arguments() {
+        val grade by string("班級名稱", "即將做更動的班級");
     }
 }
 
@@ -101,7 +107,7 @@ private suspend fun Guild.deleteClassCategoryIfNeed(name: String): Boolean {
 }
 
 private suspend fun Guild.initClassroom() {
-    val role = this.createRole() {
+    val role = this.createRole {
         name = "老師"
         color = Color(31, 147, 31).kColor
 
@@ -112,25 +118,32 @@ private suspend fun Guild.initClassroom() {
 
     this.getOwner().addRole(role.id)
     this.createTextChannel("新人加入") { position = 0 }.makeTeacherSpeakOnly()
+
+    val manageCategory = this.createCategory("管理").makeTeacherViewOnly()
+    manageCategory.createTextChannel("指令區")
 }
 
-private suspend fun Guild.createClassSet(className: String) {
+private suspend fun Guild.createClassSet(className: String, levelName: Long) {
     val guild = this
 
-    val role = guild.createRole {
+    val classRole = guild.createRole {
         name = className
+    }
+
+    val gradeRole = guild.getRoleByName("$levelName 年級") ?: guild.createRole {
+        name = "$levelName 年級"
     }
 
     val category = guild.createCategory(className) {
         addRoleOverwrite(guild.id) {
             denied += Permission.ViewChannel
         }
-        addRoleOverwrite(role.id) {
+        addRoleOverwrite(gradeRole.id) {
             allowed += Permission.ViewChannel
         }
     }
 
-    category.createTextChannel("公告區").makeTeacherSpeakOnly()
+    category.createTextChannel("公告區")
     category.createTextChannel("學生聊天")
     category.createVoiceChannel("上課區").makeTeacherSpeakOnly()
 }
